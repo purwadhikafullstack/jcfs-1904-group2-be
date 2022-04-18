@@ -1,6 +1,5 @@
 const router = require("express").Router();
 const pool = require("../../config/database");
-const { mysql2 } = require("../../config/database");
 
 //Get All Product
 
@@ -76,15 +75,16 @@ const getDeletedProductRouter = async (req, res, next) => {
 const getSoldProductRouter = async (req, res, next) => {
   try {
     const connection = await pool.promise().getConnection();
-    console.log();
 
-    const sqlGetSoldProducts = `select product_id, productCategory, productName, sum(quantity) as total_bought from transactiondetail where statusTransactionDetail = "complete" ${req.query.keyword} group by product_id, productCategory, productName ${req.query.sortedItem}`;
+    const sqlGetSoldProducts = `select product_id, productCategory, productName, sum(quantity) as total_bought from transactiondetail where statusTransactionDetail = "complete" ${req.query.keyword} group by product_id, productCategory, productName ${req.query.sortedItem} ${req.query.pages}`;
+    const sqlCountSoldProducts = `SELECT COUNT(*) AS count FROM transactiondetail where statusTransactionDetail = "complete" group by product_id , productCategory, productName`;
 
     const [result] = await connection.query(sqlGetSoldProducts);
+    const [count] = await connection.query(sqlCountSoldProducts);
 
     connection.release();
 
-    res.status(200).send(result);
+    res.status(200).send({ result, count });
   } catch (error) {
     next(error);
   }

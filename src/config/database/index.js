@@ -10,4 +10,14 @@ const pool = mysql2.createPool({
   connectionLimit: 50,
 });
 
+pool.getConnection((err, conn) => {
+  if (err) {
+    conn.release();
+    console.error("error connecting: " + err.stack);
+    return;
+  }
+  console.log(`Successfully connected to the database (id ${conn.threadId})`);
+  conn.release();
+});
+
 module.exports = pool;

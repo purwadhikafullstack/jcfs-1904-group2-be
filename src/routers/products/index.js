@@ -10,7 +10,7 @@ const putUpdateProductRouter = require("./put.products");
 router.use(putUpdateProductRouter);
 router.use(putDeleteRouter);
 router.use(putUndeleteRouter);
-// router.use(getProductRouter)
+router.use(getProductRouter);
 router.use(postProductRouter);
 
 module.exports = router;
