@@ -1,0 +1,27 @@
+# Konfigurasi Continuos Deployment
+name: 2_pharmacy
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  cd:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Deploy 2_pharmacy API with github action
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{secrets.SSH_HOST}}
+          username: ${{secrets.SSH_USERNAME}}
+          password: ${{secrets.SSH_PASSWORD}}
+          port: 22
+          script: |
+            cd ~/app/2-pharmacy-api
+            git pull origin master
+            npm install
+            pm2 restart 2-pharmacy
