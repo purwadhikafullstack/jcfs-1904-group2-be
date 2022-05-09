@@ -5,7 +5,7 @@ const validator = require("validator");
 const bcrypt = require("bcryptjs");
 const { sign } = require("../../services/token");
 const auth = require("../../middleware/auth");
-const { sendEmail } = require("../../services/emails");
+const { sendEmail, sendEmailForgotPass } = require("../../services/emails");
 
 //CREATE USER = REGISTER
 const postRegisterUserRouter = async (req, res, next) => {
@@ -49,7 +49,7 @@ const postLoginUserRouter = async (req, res, next) => {
     const { username, password } = req.body;
 
     const sqlLoginUser =
-      "SELECT id, username, password, isVerified, role FROM users WHERE username = ?;";
+      "SELECT id, username, password, isVerified, role, photo FROM users WHERE username = ?;";
     const data = req.body.username;
 
     const [result] = await connection.query(sqlLoginUser, data);
@@ -78,7 +78,74 @@ const postLoginUserRouter = async (req, res, next) => {
     next(error);
   }
 };
+
+// FORGOT PASSWORD //
+const postForgotPassword = async (req, res, next) => {
+  try {
+    const connection = await pool.promise().getConnection();
+
+    const sqlGetUserEmail = "SELECT id FROM users where email = ?;";
+    const dataEmail = req.body.email;
+    console.log(req.body);
+
+    const [result] = await connection.query(sqlGetUserEmail, dataEmail);
+
+    const user = result[0];
+    if (!user)
+      return res
+        .status(404)
+        .send({ message: "User not found! Registrasi terlebih dahulu" });
+
+    // const compareResult = dataEmail == user.email;
+    // if (!compareResult)
+    //   return res
+    //     .status(401)
+    //     .send({ message: "Email tidak cocok, Anda bukan user kami" });
+
+    const token = sign({ id: result.selectEmail }, { expiresIn: "10m" });
+
+    sendEmailForgotPass({
+      recipient: dataEmail,
+      subject: "Forgot Password",
+      url: `${process.env.API_URL}/users/reset-password?token=${token}`,
+    });
+    connection.release();
+    res.status(201).send({ message: "Email has been sent!" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// const postForgotPassword = async (req, res, next) => {
+//   try {
+//     const connection = await pool.promise().getConnection();
+//     const sql = `SELECT id FROM users WHERE email = ?;`;
+//     const sqlEmail = req.body.email;
+
+//     const result = await connection.query(sql, sqlEmail);
+//     connection.release();
+
+//     const user = result[0];
+//     console.log(result);
+//     const token = sign({ id: user[0].id });
+
+//     res.status(200).send({ user: user[0], token });
+
+//     sendResetPasswordEmail({
+//       recipient: sqlEmail,
+//       subject: "Password Email Reset",
+//       url: `${process.env.CLIENT_URL}/reset-password/${token}}`,
+//       data: {
+//         url: `${process.env.CLIENT_URL}/reset-password/${token}}`,
+//       },
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 router.post("/", postRegisterUserRouter);
 router.post("/login", postLoginUserRouter);
+router.post("/forgot-password", postForgotPassword);
 
 module.exports = router;

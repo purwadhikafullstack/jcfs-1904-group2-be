@@ -42,7 +42,7 @@ const getUserByIdRouter = async (req, res, next) => {
   try {
     const connection = await pool.promise().getConnection();
     const sqlGetUserById =
-      "SELECT id, username, fullName, age, gender, address, email, photo from users WHERE id = ?";
+      "SELECT id, username, fullName, address, age, gender, email, photo from users WHERE id = ?";
     const [result] = await connection.query(sqlGetUserById, req.params.id);
     connection.release();
 
@@ -52,54 +52,51 @@ const getUserByIdRouter = async (req, res, next) => {
   }
 };
 
-
 // Get All User
-const getUserRouterAdmin =  async (req, res, next) => {
-    try {
-      const connection = await pool.promise().getConnection()
-      console.log(req.query.pages);
-  
-      const sqlGetAllUser = `select id, username, name, gender, email, password, role from users where role = "user" ${req.query.keywordUser} ${req.query.sortUser} ${req.query.pages};`;
-      const sqlCountUser = `SELECT COUNT(*) AS user_count FROM users where role = "user";`;
-  
-      const [result] = await connection.query(sqlGetAllUser);
-      const [userCount] = await connection.query(sqlCountUser)
-      connection.release();
-  
-      res.status(200).send({result, userCount});
-    } catch (error) {
-      next(error)
-    }
-  };
+const getUserRouterAdmin = async (req, res, next) => {
+  try {
+    const connection = await pool.promise().getConnection();
 
+    const sqlGetAllUser = `select id, username, name, gender, email, password, role from users where role = "user" ${req.query.keywordUser} ${req.query.sortUser} ${req.query.pages};`;
+    const sqlCountUser = `SELECT COUNT(*) AS user_count FROM users where role = "user";`;
 
-  const getUserbyIdRouterAdmin =  async (req, res, next) => {
-    try {
-      const connection = await pool.promise().getConnection()
+    const [result] = await connection.query(sqlGetAllUser);
+    const [userCount] = await connection.query(sqlCountUser);
+    connection.release();
 
-      console.log();
-  
-      const sqlGetUserById = `select id, username, name, gender, photo, email, password, role from users where id = ${req.params.UserId};`;
+    res.status(200).send({ result, userCount });
+  } catch (error) {
+    next(error);
+  }
+};
 
-      const sqlGetTransactionByUserId = `select id, invoice, user_id, transactionStatus, totalPrice, created_at from transaction where user_id = ? ${req.query.pages}`;
-      const sqlCountTransaction = `SELECT COUNT(*) AS count FROM transaction where user_id = ?;`
-      const [result] = await connection.query(sqlGetUserById);
-      const [count] = await connection.query(sqlCountTransaction, result[0].id)
-      const [transaction] = await connection.query(sqlGetTransactionByUserId, result[0].id)
-      
-      
-      connection.release();
-  
-      res.status(200).send({result, transaction, count});
-    } catch (error) {
-      next(error)
-    }
-  };
+const getUserbyIdRouterAdmin = async (req, res, next) => {
+  try {
+    const connection = await pool.promise().getConnection();
 
-  router.get("/", getUserRouter);
+    const sqlGetUserById = `select id, username, name, gender, photo, email, password, role from users where id = ${req.params.UserId};`;
+
+    const sqlGetTransactionByUserId = `select id, invoice, user_id, transactionStatus, totalPrice, created_at from transaction where user_id = ? ${req.query.pages}`;
+    const sqlCountTransaction = `SELECT COUNT(*) AS count FROM transaction where user_id = ?;`;
+    const [result] = await connection.query(sqlGetUserById);
+    const [count] = await connection.query(sqlCountTransaction, result[0].id);
+    const [transaction] = await connection.query(
+      sqlGetTransactionByUserId,
+      result[0].id
+    );
+
+    connection.release();
+
+    res.status(200).send({ result, transaction, count });
+  } catch (error) {
+    next(error);
+  }
+};
+
+router.get("/", getUserRouter);
 router.get("/verify", getVerifyRouter);
+router.get("/admin", getUserRouterAdmin);
+router.get("/admin/:UserId", getUserbyIdRouterAdmin);
 router.get("/:id", getUserByIdRouter);
-  router.get("/admin/:UserId", getUserbyIdRouterAdmin)
-  router.get("/admin", getUserRouterAdmin)
 
-  module.exports = router;
+module.exports = router;

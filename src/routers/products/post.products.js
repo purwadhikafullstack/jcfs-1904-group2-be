@@ -8,10 +8,10 @@ const postProductRouter = async (req, res, next) => {
     const connection = await pool.promise().getConnection();
 
     await connection.beginTransaction();
-
+    
     try {
       const sqlPostProduct = "INSERT INTO products SET ?";
-
+      
       const dataProduct = [
         {
           category_id: req.body.newProduct.category_id,
@@ -45,17 +45,17 @@ const postProductRouter = async (req, res, next) => {
       ];
 
       const stockLiquid =
-        req.body.newStock.qtyBottleAvailable +
-        req.body.newStock.qtyBoxAvailable * 10;
+        parseInt(req.body.newStock.qtyBottleAvailable) +
+        parseInt(req.body.newStock.qtyBoxAvailable * 10);
       const stockNonLiquid =
-        req.body.newStock.qtyStripsavailable +
-        req.body.newStock.qtyBoxAvailable * 10;
+        parseInt(req.body.newStock.qtyStripsavailable) +
+        parseInt(req.body.newStock.qtyBoxAvailable * 10);
 
       const sqlPostLog = "INSERT INTO data_logging SET ?";
-
       const dataLogLiquid = [
         {
-          user_id: 2,
+          user_id: `${req.body.userId}`,
+          username: `${req.body.username}`,
           product_id: result.insertId,
           stock_in: stockLiquid,
           status: "add",
@@ -64,13 +64,15 @@ const postProductRouter = async (req, res, next) => {
 
       const dataLoqNonLiquid = [
         {
-          user_id: 1,
+          user_id: `${req.body.data}`,
+          username: `${req.body.username}`,
           product_id: result.insertId,
           stock_in: stockNonLiquid,
           status: "add",
         },
       ];
 
+      
       if (req.body.newProduct.isLiquid) {
         await connection.query(sqlPostLog, dataLogLiquid);
       } else {

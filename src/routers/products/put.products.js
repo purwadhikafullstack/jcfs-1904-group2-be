@@ -1,10 +1,10 @@
 const router = require("express").Router();
-const {mysql2} = require("../../config/database");
+const pool = require("../../config/database");
 
 const putDeleteRouter =  async (req, res, next) => {
 
     try {
-        const connection = await mysql2.promise().getConnection()
+        const connection = await pool.promise().getConnection()
 
         const sqlDelete = `UPDATE products SET isDeleted = 1 WHERE id = ${req.body.id}`;
 
@@ -29,7 +29,7 @@ const putDeleteRouter =  async (req, res, next) => {
 const putUndeleteRouter =  async (req, res, next) => {
 
     try {
-        const connection = await mysql2.promise().getConnection()
+        const connection = await pool.promise().getConnection()
 
         const sqlUndelete = `UPDATE products SET isDeleted = 0 WHERE id = ${req.body.id}`;
         
@@ -54,7 +54,7 @@ const putUndeleteRouter =  async (req, res, next) => {
 const putUpdateProductRouter =  async (req, res, next) => {
 
     try {
-        const connection = await mysql2.promise().getConnection()
+        const connection = await pool.promise().getConnection()
 
         const sqlUpdateProduct = `UPDATE products SET ? WHERE id = ?`;
         

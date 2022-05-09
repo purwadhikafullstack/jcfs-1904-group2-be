@@ -65,7 +65,7 @@ const getTransactionDetailByIdProduct = async (req, res, next) => {
 
     const sqlGetTransactionDetail = `select * from transactiondetail where product_id = ${req.params.productId} ${req.query.date} ${req.query.sort} ${req.query.pages} `;
 
-    const sqlgetQuantity = `select sum(quantity) as total_bought, sum(totalPrice) as total_amount from transactiondetail where product_id = ${req.params.productId} ${req.query.date}`;
+    const sqlgetQuantity = `select sum(quantity) as total_bought, sum(totalPrice) as total_amount from transactiondetail where product_id = ${req.params.productId} and statusTransactionDetail = 'complete' ${req.query.date}`;
 
     const sqlTransactionCount = `SELECT COUNT(*) AS count FROM transactiondetail where product_id = ${req.params.productId} ${req.query.date};`;
 

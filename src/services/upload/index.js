@@ -71,4 +71,78 @@ const uploadProductPhoto = multer({
   },
 });
 
-module.exports = { uploadAvatar, uploadProductPhoto };
+
+
+//Prescription
+const prescriptionDirectory = path.join(__dirname, "../../../public/prescription");
+const storagePrescription = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, prescriptionDirectory);
+  },
+
+  filename: (req, file, cb) => {
+    cb(
+      null,
+      path.parse(file.originalname).name +
+        "prescription" +
+        Date.now() +
+        path.extname(file.originalname)
+    );
+  },
+});
+
+const uploadPrescription = multer({
+  storage: storagePrescription,
+  limits: {
+    fileSize: 10000000, 
+  },
+  fileFilter(req, file, cb) {
+    const allowedExtension = [".png", ".jpg", ".jpeg"];
+   
+    const extname = path.extname(file.originalname);
+    
+    if (!allowedExtension.includes(extname))
+      return cb(new Error("Please upload image file (jpg, jpeg, png)"));
+
+    cb(null, true);
+  },
+});
+
+
+//PaymentProof
+const paymentProofDirectory = path.join(__dirname, "../../../public/paymentProof");
+const storagePaymentProof = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, paymentProofDirectory);
+  },
+
+  filename: (req, file, cb) => {
+    cb(
+      null,
+      path.parse(file.originalname).name +
+        "paymentProof" +
+        Date.now() +
+        path.extname(file.originalname)
+    );
+  },
+});
+
+const uploadPaymentProof = multer({
+  storage: storagePaymentProof,
+  limits: {
+    fileSize: 10000000, 
+  },
+  fileFilter(req, file, cb) {
+    const allowedExtension = [".png", ".jpg", ".jpeg"];
+   
+    const extname = path.extname(file.originalname);
+    
+    if (!allowedExtension.includes(extname))
+      return cb(new Error("Please upload image file (jpg, jpeg, png)"));
+
+    cb(null, true);
+  },
+});
+
+
+module.exports = { uploadAvatar, uploadProductPhoto, uploadPrescription, uploadPaymentProof };
