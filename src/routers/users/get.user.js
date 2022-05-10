@@ -31,7 +31,11 @@ const getVerifyRouter = async (req, res, next) => {
     const [result] = await connection.query(sqlUpdateVerify, dataVerify);
     connection.release();
 
-    res.status(200).send(`<h1> Verification Success </h1>`);
+    res
+      .status(200)
+      .send(
+        `<h1> Verification Success </h1> <br><a href="http://localhost:3000/login">Log in here</a>`
+      );
   } catch (error) {
     next(error);
   }

@@ -107,7 +107,7 @@ const postForgotPassword = async (req, res, next) => {
     sendEmailForgotPass({
       recipient: dataEmail,
       subject: "Forgot Password",
-      url: `${process.env.API_URL}/users/reset-password?token=${token}`,
+      url: `${process.env.CLIENT_URL}/reset-password/${token}`,
     });
     connection.release();
     res.status(201).send({ message: "Email has been sent!" });

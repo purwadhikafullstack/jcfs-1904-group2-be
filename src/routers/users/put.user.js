@@ -3,11 +3,29 @@ require("dotenv").config();
 const router = require("express").Router();
 const pool = require("../../config/database");
 const bcrypt = require("bcryptjs");
-const { sign } = require("../../services/token");
+const { sign, verify } = require("../../services/token");
 const auth = require("../../middleware/auth");
-const { sendEmail } = require("../../services/emails");
 const { uploadAvatar } = require("../../services/upload");
-const multer = require("multer");
+
+// RESET PASSWORD //
+const putResetPassword = async (req, res, next) => {
+  try {
+    const connection = await pool.promise().getConnection();
+
+    const sqlReset = "UPDATE users SET password = ? WHERE id = ?;";
+    const sqlNewPassword = bcrypt.hashSync(req.body.password);
+    const verifiedToken = verify(req.params.token);
+
+    const newPassword = [sqlNewPassword, verifiedToken.id];
+
+    const result = await connection.query(sqlReset, newPassword);
+    connection.release();
+
+    res.status(200).send("Password has been reset");
+  } catch (error) {
+    next(error);
+  }
+};
 
 // EDIT PHOTO PROFILE - AVATAR //
 const multerUploadSingle = uploadAvatar.single("photo");
@@ -29,37 +47,37 @@ const putUserPhotoById = async (req, res, next) => {
   }
 };
 
-const putChangePassword = async (req, res, next) => {
-  try {
-    const connection = await pool.promise().getConnection();
+// const putChangePassword = async (req, res, next) => {
+//   try {
+//     const connection = await pool.promise().getConnection();
 
-    const { oldPassword, newPassword } = req.body;
+//     const { oldPassword, newPassword } = req.body;
 
-    // Ambil password yang ada di database
-    const sqlGetPassword = "SELECT password from users WHERE id = ?";
-    const dataGetPassword = req.user.id;
-    const [response] = await connection.query(sqlGetPassword, dataGetPassword);
-    const password = response[0].password;
+//     // Ambil password yang ada di database
+//     const sqlGetPassword = "SELECT password from users WHERE id = ?";
+//     const dataGetPassword = req.user.id;
+//     const [response] = await connection.query(sqlGetPassword, dataGetPassword);
+//     const password = response[0].password;
 
-    const compareResult = bcrypt.compareSync(oldPassword, password);
+//     const compareResult = bcrypt.compareSync(oldPassword, password);
 
-    if (!compareResult)
-      // Jika password lama tidak cocok
-      return res.status(401).send({ message: "Wrong Password Entered!" });
+//     if (!compareResult)
+//       // Jika password lama tidak cocok
+//       return res.status(401).send({ message: "Wrong Password Entered!" });
 
-    // Jika password yang diketik oleh user cocok, apa selanjutnya ?
+//     // Jika password yang diketik oleh user cocok, apa selanjutnya ?
 
-    const sqlNewPassword = "UPDATE users SET password = ? WHERE password = ?;";
-    const newData = bcrypt.hashSync(req.body.newPassword);
-    const getId = password;
+//     const sqlNewPassword = "UPDATE users SET password = ? WHERE password = ?;";
+//     const newData = bcrypt.hashSync(req.body.newPassword);
+//     const getId = password;
 
-    const [result] = await connection.query(sqlNewPassword, [newData, getId]);
+//     const [result] = await connection.query(sqlNewPassword, [newData, getId]);
 
-    res.status(201).send(result);
-  } catch (error) {
-    next(error);
-  }
-};
+//     res.status(201).send(result);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
 
 // EDIT PROFILE KESELURUHAN //
 const putEditProfile = async (req, res, next) => {
@@ -119,4 +137,5 @@ router.put(
   multerUploadSingle,
   putUserPhotoById
 );
+router.put("/reset-password/:token", putResetPassword);
 module.exports = router;
