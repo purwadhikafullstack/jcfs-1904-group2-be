@@ -3,6 +3,7 @@ require("dotenv").config();
 const router = require("express").Router();
 const pool = require("../../config/database");
 const bcrypt = require("bcryptjs");
+
 const { sign, verify } = require("../../services/token");
 const auth = require("../../middleware/auth");
 const { uploadAvatar } = require("../../services/upload");
@@ -56,6 +57,7 @@ const putEditProfile = async (req, res, next) => {
     let { oldPassword, newPassword, fullName, age, gender, address, email } =
       req.body;
 
+
     console.log("change ", req.body);
 
     const sqlGetAllData = "SELECT * from users WHERE id = ?";
@@ -67,6 +69,7 @@ const putEditProfile = async (req, res, next) => {
       const compareResult = bcrypt.compareSync(oldPassword, password);
       if (!compareResult)
         // Jika password lama tidak cocok
+
         return res.status(401).send("Wrong password entered!");
 
       newPassword = bcrypt.hashSync(newPassword);
@@ -100,6 +103,7 @@ const putEditProfile = async (req, res, next) => {
   }
 };
 
+
 router.put("/edit-profile/:id", auth, putEditProfile);
 router.put(
   "/edit-profile-picture/:id",
@@ -108,4 +112,5 @@ router.put(
   putUserPhotoById
 );
 router.put("/reset-password/:token", putResetPassword);
+
 module.exports = router;

@@ -13,17 +13,12 @@ const getCustomOrderRouter = async (req, res, next) => {
 
     connection.release();
 
+
     res.status(200).send({ result, count });
   } catch (error) {
     next(error);
   }
 };
-
-const getCustomOrderByIdRouter = async (req, res, next) => {
-  try {
-    const connection = await pool.promise().getConnection();
-
-    const sqlGetOrder = `select * from custom_order where id = ${req.params.orderId};`;
 
     const [result] = await connection.query(sqlGetOrder);
 
