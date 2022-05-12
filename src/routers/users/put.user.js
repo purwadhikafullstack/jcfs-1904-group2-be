@@ -13,8 +13,10 @@ const putResetPassword = async (req, res, next) => {
     const connection = await pool.promise().getConnection();
 
     const sqlReset = "UPDATE users SET password = ? WHERE id = ?;";
-    const sqlNewPassword = bcrypt.hashSync(req.body.password);
+
     const verifiedToken = verify(req.params.token);
+
+    const sqlNewPassword = bcrypt.hashSync(req.body.password);
 
     const newPassword = [sqlNewPassword, verifiedToken.id];
 
@@ -46,38 +48,6 @@ const putUserPhotoById = async (req, res, next) => {
     next(error);
   }
 };
-
-// const putChangePassword = async (req, res, next) => {
-//   try {
-//     const connection = await pool.promise().getConnection();
-
-//     const { oldPassword, newPassword } = req.body;
-
-//     // Ambil password yang ada di database
-//     const sqlGetPassword = "SELECT password from users WHERE id = ?";
-//     const dataGetPassword = req.user.id;
-//     const [response] = await connection.query(sqlGetPassword, dataGetPassword);
-//     const password = response[0].password;
-
-//     const compareResult = bcrypt.compareSync(oldPassword, password);
-
-//     if (!compareResult)
-//       // Jika password lama tidak cocok
-//       return res.status(401).send({ message: "Wrong Password Entered!" });
-
-//     // Jika password yang diketik oleh user cocok, apa selanjutnya ?
-
-//     const sqlNewPassword = "UPDATE users SET password = ? WHERE password = ?;";
-//     const newData = bcrypt.hashSync(req.body.newPassword);
-//     const getId = password;
-
-//     const [result] = await connection.query(sqlNewPassword, [newData, getId]);
-
-//     res.status(201).send(result);
-//   } catch (error) {
-//     next(error);
-//   }
-// };
 
 // EDIT PROFILE KESELURUHAN //
 const putEditProfile = async (req, res, next) => {
