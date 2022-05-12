@@ -5,7 +5,6 @@ const pool = require("../../config/database");
 const getTransactionRouter = async (req, res, next) => {
   try {
     const connection = await pool.promise().getConnection();
-    
     const sqlGetTransaction = `select id, invoice, user_id, transactionStatus, totalPrice, created_at from transaction ${req.query.date} ${req.query.status} ${req.query.keywordTransaction} ${req.query.isCustom} ${req.query.sortTransactions} ${req.query.pages}`;
     const sqlCountTransaction = `SELECT COUNT(*) AS count FROM transaction ${req.query.date} ${req.query.status} ${req.query.keywordTransaction} ${req.query.isCustom} ${req.query.sortTransactions} `;
 
@@ -100,10 +99,10 @@ const getTransactionByIdRouter = async (req, res, next) => {
       res.status(200).send({ result, user, address, transactiondetail });
     } else {
       connection.release();
+
       res.status(200).send({ result, user, transactiondetail});
     }
   
-    
   } catch (error) {
     next(error);
   }
@@ -146,13 +145,11 @@ const getTransactionByYearRouter = async (req, res, next) => {
   }
 };
 
-
 //Get Transaction by user id
 
 const getTransactionByUserIdRouter = async (req, res, next) => {
   try {
     const connection = await pool.promise().getConnection();
-
 
     const sqlGetTransaction = `select id, invoice, user_id, transactionStatus, totalPrice, address_id, isByPresciption, created_at from transaction where user_id = ${req.params.userId} ${req.query.keyword} ${req.query.status} ${req.query.sort} ${req.query.pages} `;
     const sqlCountTransaction = `SELECT COUNT(*) AS count FROM transaction where user_id = ${req.params.userId} ${req.query.keyword} ${req.query.status}`

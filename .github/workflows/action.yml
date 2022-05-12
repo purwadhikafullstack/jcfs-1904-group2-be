@@ -4,7 +4,7 @@ name: 2_pharmacy
 on:
   push:
     branches:
-      - master
+      - dev
 
 jobs:
   cd:
@@ -22,6 +22,6 @@ jobs:
           port: 22
           script: |
             cd ~/app/2-pharmacy-api
-            git pull origin master
+            git pull origin dev
             npm install
             pm2 restart 2-pharmacy

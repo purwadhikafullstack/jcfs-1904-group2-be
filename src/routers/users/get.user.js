@@ -3,6 +3,7 @@ const router = require("express").Router();
 const { verify } = require("../../services/token");
 const pool = require("../../config/database");
 
+
 const getUserRouter = async (req, res, next) => {
   try {
     const connection = await pool.promise().getConnection();
@@ -31,7 +32,11 @@ const getVerifyRouter = async (req, res, next) => {
     const [result] = await connection.query(sqlUpdateVerify, dataVerify);
     connection.release();
 
-    res.status(200).send(`<h1> Verification Success </h1>`);
+    res
+      .status(200)
+      .send(
+        `<h1> Verification Success </h1> <br><a href="http://localhost:3000/login">Log in here</a>`
+      );
   } catch (error) {
     next(error);
   }
@@ -42,7 +47,7 @@ const getUserByIdRouter = async (req, res, next) => {
   try {
     const connection = await pool.promise().getConnection();
     const sqlGetUserById =
-      "SELECT id, username, name, age, gender, email, photo from users WHERE id = ?";
+      "SELECT id, username, fullName, address, age, gender, email, photo from users WHERE id = ?";
     const [result] = await connection.query(sqlGetUserById, req.params.id);
     connection.release();
 
@@ -52,8 +57,8 @@ const getUserByIdRouter = async (req, res, next) => {
   }
 };
 
-
 // Get All User
+
 const getUserRouterAdmin =  async (req, res, next) => {
     try {
       const connection = await pool.promise().getConnection()
@@ -103,3 +108,4 @@ const getUserRouterAdmin =  async (req, res, next) => {
   router.get("/:id", getUserByIdRouter);
 
   module.exports = router;
+
