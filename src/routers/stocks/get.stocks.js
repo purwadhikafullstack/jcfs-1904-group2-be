@@ -2,6 +2,8 @@ const router = require("express").Router();
 const pool = require("../../config/database");
 
 
+
+
 const getStocksRouter =  async (req, res, next) => {
 
     const connection = await pool.promise().getConnection()
@@ -39,16 +41,16 @@ const getStocksDetailRouter =  async (req, res, next) => {
 
     const sqlGetStocks = "select * from stocks WHERE product_id = ?";
 
-    const sqlGetLog = `select * from data_logging where product_id = ${req.params.productsId} ${req.query.filter} ${req.query.date} ${req.query.sort}`;
+    const sqlGetLog = `select * from data_logging where product_id = ${req.params.productsId} ${req.query.filter} ${req.query.date} ${req.query.sort}`
 
-    const sqlGetLogDetail = `select sum(stock_in) as total_stock_in, sum(stock_out) as total_stock_out from data_logging where product_id = ${req.params.productsId} ${req.query.filter} ${req.query.date}`;
+    const sqlGetLogDetail = `select sum(stock_in) as total_stock_in, sum(stock_out) as total_stock_out from data_logging where product_id = ${req.params.productsId} ${req.query.filter} ${req.query.date}`
 
-    const [detail] = await connection.query(sqlGetLogDetail);
-    const [data] = await connection.query(sqlGetLog);
-    const [result] = await connection.query(
-      sqlGetStocks,
-      req.params.productsId
-    );
+
+
+
+    const [detail] = await connection.query(sqlGetLogDetail)
+    const [data] = await connection.query(sqlGetLog)
+    const [result] = await connection.query(sqlGetStocks, req.params.productsId);
 
 
     const {qtyBoxAvailable, qtyBoxTotal, qtyBottleAvailable, qtyBottleTotal, qtyMlAvailable, qtyMlTotal, qtyStripsavailable, qtyStripsTotal, qtyMgAvailable, qtyMgTotal } = result[0]
@@ -72,4 +74,3 @@ const getStocksDetailRouter =  async (req, res, next) => {
   router.get("/:productsId", getStocksRouter, )
 
   module.exports = router;
-

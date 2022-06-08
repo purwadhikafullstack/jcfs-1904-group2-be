@@ -10,10 +10,10 @@ const postProductRouter = async (req, res, next) => {
   try {
     
     await connection.beginTransaction();
-
+    
     try {
       const sqlPostProduct = "INSERT INTO products SET ?";
-
+      
       const dataProduct = [
         {
           category_id: req.body.newProduct.category_id,
@@ -74,6 +74,7 @@ const postProductRouter = async (req, res, next) => {
         },
       ];
 
+      
       if (req.body.newProduct.isLiquid) {
         await connection.query(sqlPostLog, dataLogLiquid);
       } else {

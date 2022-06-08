@@ -7,15 +7,52 @@ const pool = require("../../config/database");
 const putAddressRouter =  async (req, res, next) => {  
 
   const connection = await pool.promise().getConnection();
-
+  
     try {
+
+      const dataCourier = [
+        {
+          transaction_id: req.params.transactionId,
+          courier: req.body.courierForm.courier,
+          service: req.body.courierForm.service,
+          description: req.body.courierForm.description,
+          cost: req.body.courierForm.cost,
+          etd: req.body.courierForm.etd,
+        },
+      ];
         
-       
         const sqlInputAddress = `UPDATE transaction SET address_id = ${req.body.firstAddress.id} where id = ${req.params.transactionId}`;
 
+        const sqlGetCourier = `select * from courier where transaction_id = ${dataCourier[0].transaction_id}`
+        
+        const sqlInputCourier = `INSERT INTO courier SET ?`
+        
         const [result] = await connection.query(sqlInputAddress);
-        connection.release();
-        res.status(200).send(result);
+        const [getCourier] = await connection.query(sqlGetCourier)
+
+        console.log(getCourier);
+        
+          
+        if (getCourier[0]) {
+          const sqlUpdateCourier = `update courier SET ?  where id = ${getCourier[0].id}`
+          const [courier] = await connection.query( sqlUpdateCourier, dataCourier)
+          console.log(courier);
+          connection.release();
+          res.status(200).send(result)
+          
+        }else{
+          const [courier] = await connection.query( sqlInputCourier, dataCourier)
+          connection.release();
+          res.status(200).send(result);
+
+        }
+          
+        
+        console.log(sqlGetCourier);
+        console.log(getCourier);
+        
+       
+       
          
     } catch (error) {
       connection.release();

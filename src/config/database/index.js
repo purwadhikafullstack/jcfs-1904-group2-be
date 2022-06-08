@@ -22,7 +22,6 @@ pool.getConnection((err, conn) => {
   }
     
     
-    
   
 });
 

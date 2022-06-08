@@ -1,198 +1,105 @@
 const router = require("express").Router();
 const pool = require("../../config/database");
 
-//Get all transaction
-const getTransactionRouter = async (req, res, next) => {
+const getTransactionDetailRouter = async (req, res, next) => {
 
   const connection = await pool.promise().getConnection();
 
   try { 
-    
-    const sqlGetTransaction = `select id, invoice, user_id, transactionStatus, totalPrice, created_at from transaction ${req.query.date} ${req.query.status} ${req.query.keywordTransaction} ${req.query.isCustom} ${req.query.sortTransactions} ${req.query.pages}`;
-    const sqlCountTransaction = `SELECT COUNT(*) AS count FROM transaction ${req.query.date} ${req.query.status} ${req.query.keywordTransaction} ${req.query.isCustom} ${req.query.sortTransactions} `;
 
-    const [result] = await connection.query(sqlGetTransaction);
-    const [count] = await connection.query(sqlCountTransaction);
+    const sqlGetTransactionDetail = "select * from transactiondetail";
+
+    const sqlTotalSold = `select sum(quantity) AS total_sold from transactiondetail where statusTransactionDetail = "complete";`;
+
+    const [result] = await connection.query(sqlGetTransactionDetail);
+
+    const [totalSold] = await connection.query(sqlTotalSold);
+
     connection.release();
-    res.status(200).send({ result, count });
+
+    res.status(200).send({ result, totalSold });
   } catch (error) {
     connection.release();
     next(error);
   }
 };
 
-//Get Completed transaction
-const getSumCompletedTransactionRouter = async (req, res, next) => {
+// get transaction detail by category
+
+const getTransactionDetailCategoryRouter = async (req, res, next) => {
 
   const connection = await pool.promise().getConnection();
 
   try {
 
-    const sqlGetTotalPrice = `select sum(totalPrice) AS total_revenue from transaction where transactionStatus = "complete"`;
+    const sqlCategoryDetail = `select productCategory, sum(quantity) as total_bought from transactiondetail where statusTransactionDetail ="complete" group by productCategory ${req.query.sortedCategory} ${req.query.pages};`;
+    const sqlCategoryCount = `SELECT COUNT(*) AS count FROM transactiondetail where statusTransactionDetail = 'complete' group by productCategory;`;
+    const [categoryDetail] = await connection.query(sqlCategoryDetail);
+    const [count] = await connection.query(sqlCategoryCount);
+    connection.release();
 
-    const sqlGetTotalPriceThirty = `select sum(totalPrice) AS total_revenue from transaction where transactionStatus = "complete" and created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY);`;
-
-    const sqlGetTotalPriceSeven = `select sum(totalPrice) AS total_revenue from transaction where transactionStatus = "complete" and created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY);`;
-
-    const sqlGetTotalPriceToday = `select sum(totalPrice) AS total_revenue from transaction where transactionStatus = "complete" and created_at >= CURDATE();`;
-
-    const sqlGetDetailTransactionMonth = `select year(created_at) as year, MONTH(created_at) As month , sum(totalPrice) as total_revenue from transaction where transactionStatus = "complete" and created_at >= DATE_SUB(CURDATE(), INTERVAL ? month) group by year, month;`;
-
-    const sqlGetDetailTransactionYear = `select year(created_at) as year, MONTH(created_at) As month , sum(totalPrice) as total_revenue from transaction where transactionStatus = "complete" and year(created_at) = ? group by year, month;`;
-
-    month = req.query.month;
-    year = req.query.yeardata;
-
-    const [sumResultAll] = await connection.query(sqlGetTotalPrice);
-    const [sumResultThirty] = await connection.query(sqlGetTotalPriceThirty);
-    const [sumResultSeven] = await connection.query(sqlGetTotalPriceSeven);
-    const [sumResultToday] = await connection.query(sqlGetTotalPriceToday);
-
-    if (year) {
-      const [detailTransactionMonth] = await connection.query(
-        sqlGetDetailTransactionYear,
-        year
-      );
-      connection.release();
-      res
-        .status(200)
-        .send({
-          sumResultAll,
-          sumResultThirty,
-          sumResultSeven,
-          sumResultToday,
-          detailTransactionMonth,
-        });
-    } else {
-      const [detailTransactionMonth] = await connection.query(
-        sqlGetDetailTransactionMonth,
-        month
-      );
-      connection.release();
-      res
-        .status(200)
-        .send({
-          sumResultAll,
-          sumResultThirty,
-          sumResultSeven,
-          sumResultToday,
-          detailTransactionMonth,
-        });
-    }
+    res.status(200).send({ categoryDetail, count });
   } catch (error) {
     connection.release();
     next(error);
   }
 };
 
-const getTransactionByIdRouter = async (req, res, next) => {
+/// transaction detail by id
 
-  const connection = await pool.promise().getConnection();
-  try {
-    
-
-    const sqlGetTransaction = `select id, invoice, user_id, transactionStatus, totalPrice, address_id, isByPresciption, created_at from transaction where id = ${req.params.transactionId}`;
-
-    const [result] = await connection.query(sqlGetTransaction);
-    
-    sqlGetTransactionDetail = `select * from transactiondetail where transaction_id = ? ;`
-    sqlGetUser = `select * from users where id = ?`;
-    sqlGetAddress = `select * from address where id = ?`
-
-    const [transactiondetail] = await connection.query(sqlGetTransactionDetail, result[0].id)
-    const [user] = await connection.query(sqlGetUser, result[0].user_id);
-   
-    if (result[0].address_id) {
-      const [address] = await connection.query(sqlGetAddress, result[0].address_id)
-      connection.release();
-      res.status(200).send({ result, user, address, transactiondetail });
-    } else {
-      connection.release();
-      res.status(200).send({ result, user, transactiondetail});
-    }
-  
-    
-  } catch (error) {
-    connection.release();
-    next(error);
-  }
-};
-
-// get transaction by Date
-const getTransactionByDateRouter = async (req, res, next) => {
-
-  const connection = await pool.promise().getConnection();
-
-  try {
-
-    const sqlGetTransactionByDate = `select sum(totalPrice) AS total_revenue from transaction ${req.query.date} and transactionStatus = 'complete' `;
-    const sqlGetTransactionByMonth = `select sum(totalPrice) AS total_revenue, MONTH(created_at) As month, YEAR(created_at) As year from transaction ${req.query.date} and transactionStatus = 'complete' group by month order by created_at desc;`;
-
-    const [result] = await connection.query(sqlGetTransactionByDate);
-    const [month] = await connection.query(sqlGetTransactionByMonth);
-    connection.release();
-
-    res.status(200).send({ result, month });
-  } catch (error) {
-    connection.release();
-    next(error);
-  }
-};
-
-// Get transaction by year
-
-const getTransactionByYearRouter = async (req, res, next) => {
+const getTransactionDetailByIdRouter = async (req, res, next) => {
 
   const connection = await pool.promise().getConnection();
 
   try {  
 
-    const sqlGetTransactionTotal = `select sum(totalPrice) AS total_revenue from transaction ${req.query.year} and transactionStatus = 'complete' `;
-    const sqlGetTransactionByYear = `select sum(totalPrice) AS total_revenue, YEAR(created_at) As year from transaction ${req.query.year} and transactionStatus = 'complete' group by year; `;
+    const sqlGetTransactionDetail = `select * from transactiondetail where transaction_id = ${req.params.transactionId} group by id;`;
 
-    const [result] = await connection.query(sqlGetTransactionByYear);
-    const [total] = await connection.query(sqlGetTransactionTotal);
+    const [result] = await connection.query(sqlGetTransactionDetail);
+
     connection.release();
 
-    res.status(200).send({ result, total });
+    res.status(200).send(result);
   } catch (error) {
     connection.release();
     next(error);
   }
 };
 
+// transaction detail by product
 
-//Get Transaction by user id
-
-const getTransactionByUserIdRouter = async (req, res, next) => {
+const getTransactionDetailByIdProduct = async (req, res, next) => {
 
   const connection = await pool.promise().getConnection();
 
   try {
-    
-    const sqlGetTransaction = `select id, invoice, user_id, transactionStatus, totalPrice, address_id, isByPresciption, created_at from transaction where user_id = ${req.params.userId} ${req.query.keyword} ${req.query.status} ${req.query.sort} ${req.query.pages} `;
-    const sqlCountTransaction = `SELECT COUNT(*) AS count FROM transaction where user_id = ${req.params.userId} ${req.query.keyword} ${req.query.status}`
-    const [result] = await connection.query(sqlGetTransaction);
-    const [count] = await connection.query(sqlCountTransaction)
 
+    const sqlGetTransactionDetail = `select * from transactiondetail where product_id = ${req.params.productId} ${req.query.date} ${req.query.sort} ${req.query.pages} `;
+
+    const sqlgetQuantity = `select sum(quantity) as total_bought, sum(totalPrice) as total_amount from transactiondetail where product_id = ${req.params.productId} and statusTransactionDetail = 'complete' ${req.query.date}`;
+
+    const sqlTransactionCount = `SELECT COUNT(*) AS count FROM transactiondetail where product_id = ${req.params.productId} ${req.query.date};`;
+
+    const [count] = await connection.query(sqlTransactionCount);
+    const [result] = await connection.query(sqlGetTransactionDetail);
+    const [total] = await connection.query(sqlgetQuantity);
+
+    const sqlGetCategoryName = `select categoryName from category where id = ${result[0].productCategory}`;
+    const sqlGetProductDetail = `select id, category_id, productName, productDetails, productIMG, isLiquid, price from products where id = ${result[0].product_id}`;
+
+    const [category] = await connection.query(sqlGetCategoryName);
+    const [product] = await connection.query(sqlGetProductDetail);
     connection.release();
-
-    res.status(200).send({result, count});
-  
-  
-    
+    res.status(200).send({ result, category, total, product, count });
   } catch (error) {
     connection.release();
     next(error);
   }
 };
 
+router.get("/product/:productId", getTransactionDetailByIdProduct);
+router.get("/category", getTransactionDetailCategoryRouter);
+router.get("/:transactionId", getTransactionDetailByIdRouter);
+router.get("/", getTransactionDetailRouter);
 
-
-router.get("/year", getTransactionByYearRouter);
-router.get("/date", getTransactionByDateRouter);
-router.get("/completed", getSumCompletedTransactionRouter);
-router.get("/user/:userId", getTransactionByUserIdRouter)
-router.get("/:transactionId", getTransactionByIdRouter);
-router.get("/", getTransactionRouter);
 module.exports = router;

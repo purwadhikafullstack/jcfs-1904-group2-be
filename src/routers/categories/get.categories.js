@@ -7,8 +7,8 @@ const getCategoriesRouter = async (req, res, next) => {
   
   const connection = await pool.promise().getConnection();
 
+  try {  
 
-  try {
     const sqlGetCategories = "select id, categoryName from category";
 
     const [result] = await connection.query(sqlGetCategories);

@@ -36,8 +36,11 @@ const putCustomOrderRouter =  async (req, res, next) => {
         connection.release();
         next(error)
     }
+   
 };
 
-router.put("/:orderId", putCustomOrderRouter);
+
+
+router.put("/:orderId", putCustomOrderRouter)
 
 module.exports = router;

@@ -1,10 +1,10 @@
 const router = require("express").Router();
 const pool = require("../../config/database");
 
-const getCartRouter = async (req, res, next) => {
 
-  const connection = await pool.promise().getConnection();
-
+const getCartRouter =  async (req, res, next) => {
+  
+  const connection = await pool.promise().getConnection()
 
     try {
   
@@ -23,7 +23,7 @@ const getCartRouter = async (req, res, next) => {
     }
   };
 
+
+  router.get("/", getCartRouter)
  
-
   module.exports = router;
-

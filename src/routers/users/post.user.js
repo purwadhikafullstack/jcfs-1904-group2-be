@@ -36,6 +36,8 @@ const postRegisterUserRouter = async (req, res, next) => {
         url: `${process.env.API_URL}/users/verify?token=${token}`,
       },
     });
+
+    console.log(process.env.API_URL)
     connection.release();
     res.status(201).send({
       message: `Data dengan username: ${req.body.username} berhasil ditambahkan`,
